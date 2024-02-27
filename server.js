@@ -1,4 +1,6 @@
+const dayjs = require('dayjs')
 const express = require("express");
+const sendEmail = require('./emailSender');
 const app = express();
 const { pool } = require('./dbConfig');
 const bcrypt = require('bcrypt');
@@ -60,19 +62,17 @@ try {
 }
 
 // Routes
-app.get('/admin', (req, res) => {
+app.get('/admin', checkNotAuthenticated, (req, res) => {
     res.render('admin');
 });
 
-app.post('/admin/add', upload.array('images', 3), (req, res) => {
+app.post('/admin/add', checkNotAuthenticated, upload.array('images', 3), (req, res) => {
     const newItem = {
         id: portfolioItems.length + 1,
         name: req.body.name,
         description: req.body.description,
         images: req.files.map(file => file.filename),
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        deletedAt: null
+        createdAt: dayjs(new Date()).format('HH:mm:ss dddd D MMMM YYYY')
     };
     portfolioItems.push(newItem);
     fs.writeFileSync('portfolioItems.json', JSON.stringify(portfolioItems));
@@ -91,7 +91,7 @@ app.get('/users/login', checkAuthenticated, (req, res)=> {
     res.render('login');
 });
 
-app.get('/users/dashboard', checkNotAuthenticated, (req, res)=> {
+app.get('/users/dashboard', checkNotAuthenticated, checkAdmin, (req, res)=> {
     res.render('dashboard', {user: req.user.name, portfolioItems});
 });
 
@@ -160,10 +160,10 @@ app.post('/users/register', async (req, res)=> {
                             if (err) {
                                 throw err;
                             }
-
                             console.log(results.rows);
                             req.flash('success_msg', 'You are now registered! Please log in');
                             res.redirect('/users/login');
+                            sendEmail(email, 'Thank you for registering on the portfolio viewing site!');
                         }
                     );
                 }
@@ -187,9 +187,17 @@ function checkAuthenticated(req, res, next) {
 
 function checkNotAuthenticated(req, res, next) {
     if (req.isAuthenticated()) {
-        return next();
+            return next();
     }
     res.redirect('/users/login');
+}
+
+function checkAdmin(req, res, next) {
+    if (req.user.email === process.env.ADMIN_EMAIL) {
+        sendEmail(process.env.ADMIN_EMAIL, 'Someone logged into the admin account.');
+        return res.redirect('/admin');
+    }
+    next();
 }
 
 app.listen(PORT, ()=>{
