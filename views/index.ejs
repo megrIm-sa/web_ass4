@@ -1,17 +1,71 @@
 <!DOCTYPE html>
 <html lang="en">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <meta http-equiv="X-UA-Compatible" content="ie=edge">
-        <link rel="stylesheet"
-              href="https://cdnjs.cloudflare.com/ajax/libs/skeleton/2.0.4/skeleton.min.css"
-              integrity="sha512-EZLkOqwILORob+p0BXZc+Vm3RgJBOe1Iq/0fiI7r/wJgzOFZMlsqTa29UEl6v6U6gsV4uIpsNZoV32YZqrCRCQ=="
-              crossorigin="anonymous" referrerpolicy="no-referrer" />
-        <title>Home</title>
-    </head>
-    <body>
-        <h1>Home</h1>
-        <a href="/users/login">Login</a>
-    </body>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Demo</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://api-maps.yandex.ru/2.1/?apikey=YOUR_YANDEX_MAPS_API_KEY&lang=en_US" type="text/javascript"></script>
+</head>
+<body>
+<a href="/users/dashboard">Dashboard</a>
+
+<!-- PokeAPI Section -->
+<h2>Pokemon Data</h2>
+<form id="pokemonForm">
+    <label for="pokemonId">Enter Pokemon ID:</label>
+    <input type="number" id="pokemonId" name="pokemonId" min="1" max="811" required>
+    <button type="submit">Fetch Data</button>
+</form>
+<div id="pokemonData"></div>
+
+<!-- YouTube Video Embed -->
+<h2>YouTube Video</h2>
+<iframe width="560" height="315" src="https://www.youtube.com/embed/v48HS1gbBq4?si=ihBW2aUGjUQ-Cg64" frameborder="0" allowfullscreen></iframe>
+
+<!-- Yandex Maps Embed -->
+<h2>Yandex Maps</h2>
+<div id="yandexMap" style="width:100%;height:400px;"></div>
+
+<script>
+    // Initialize Yandex Maps
+    function initYandexMap() {
+        ymaps.ready(function () {
+            var map = new ymaps.Map("yandexMap", {
+                center: [51.1655, 71.4272],
+                zoom: 10
+            });
+        });
+    }
+    // Function to fetch Pokemon data from PokeAPI
+    function fetchPokemonData(pokemonId) {
+        $.ajax({
+            url: `https://pokeapi.co/api/v2/pokemon/${pokemonId}`,
+            type: 'GET',
+            success: function(data) {
+                // Display Pokemon data
+                $('#pokemonData').html(`
+                    <p>Name: ${data.name}</p>
+                    <p>Height: ${data.height}</p>
+                    <p>Weight: ${data.weight}</p>
+                    <img src="${data.sprites.front_default}" alt="Pokemon Image">
+                `);
+            },
+            error: function(error) {
+                console.log('Error fetching Pokemon data:', error);
+            }
+        });
+    }
+
+    // Handle form submission
+    $('#pokemonForm').submit(function(event) {
+        event.preventDefault();
+        var pokemonId = $('#pokemonId').val();
+        fetchPokemonData(pokemonId);
+    });
+
+    // Call initialization functions
+    initYandexMap();
+</script>
+</body>
 </html>
