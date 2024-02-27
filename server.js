@@ -79,6 +79,26 @@ app.post('/admin/add', checkNotAuthenticated, upload.array('images', 3), (req, r
     res.redirect('/admin');
 });
 
+// Route to delete a portfolio item by ID
+app.post('/admin/delete', checkNotAuthenticated, (req, res) => {
+    const itemId = req.body.itemId;
+
+    // Find index of portfolio item with matching ID
+    const index = portfolioItems.findIndex(item => item.id === parseInt(itemId));
+    if (index === -1) {
+        return res.status(404).json({ error: 'Portfolio item not found' });
+    }
+
+    // Remove portfolio item from array
+    portfolioItems.splice(index, 1);
+
+    // Write updated portfolio data back to file
+    fs.writeFileSync('portfolioItems.json', JSON.stringify(portfolioItems));
+
+    res.json({ success: true });
+});
+
+
 app.get('/', (req, res)=> {
     res.render('index', )
 });
